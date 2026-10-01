@@ -2,6 +2,21 @@
 
 A modern IT company website built with Next.js, TypeScript, and styled-components.
 
+## Live demo
+
+Visit the deployed site: [https://technest-nextjs.vercel.app/](https://technest-nextjs.vercel.app/)
+
+## Features
+
+- Responsive pages for Home, About, Services, Contact, FAQ, and Privacy Policy
+- Login flow with a personalized dashboard and recent activity overview
+- Demo account state persisted in browser local storage
+- Light and dark themes, including a responsive mobile navigation menu
+- Contact form with field validation and toast notifications
+- Built with Next.js App Router, TypeScript, and styled-components
+
+> **Note:** Authentication and contact submission are front-end demonstrations; no backend service is connected.
+
 ## Project structure
 
 - `src/app` — App Router pages and routing
@@ -23,6 +38,3 @@ A modern IT company website built with Next.js, TypeScript, and styled-component
 
 Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-## Notes
-
-The app includes a full auth flow with local storage persistence, dark/light mode, responsive navigation, and reusable styled components.
