@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     template: "%s | TechNest",
   },
   description: "TechNest is a modern IT company website built with Next.js, TypeScript, and styled-components.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
