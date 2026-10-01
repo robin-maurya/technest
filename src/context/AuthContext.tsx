@@ -26,16 +26,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = window.localStorage.getItem("technest-user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive) return;
+
+      try {
+        const storedUser = window.localStorage.getItem("technest-user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Unable to load saved auth state", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Unable to load saved auth state", error);
-    } finally {
-      setIsLoading(false);
-    }
+
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const login = useCallback((nextUser: UserProfile) => {

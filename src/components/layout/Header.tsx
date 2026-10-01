@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useToast } from "@/context/ToastContext";
@@ -32,7 +32,22 @@ export function Header() {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [open]);
+
   const handleSignOut = () => {
+    setOpen(false);
     logout();
     showToast("Signed out successfully.", "info");
     setIsLoading(true);
@@ -95,14 +110,20 @@ export function Header() {
           <ThemeButton onClick={toggleTheme} type="button">
             {themeMode === "light" ? "🌙" : "☀️"}
           </ThemeButton>
-          <MenuButton type="button" onClick={() => setOpen((value) => !value)}>
-            ☰
+          <MenuButton
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+          >
+            {open ? "×" : "☰"}
           </MenuButton>
         </MobileActions>
       </NavContainer>
 
       {open && (
-        <MobileNav>
+        <MobileNav id="mobile-navigation">
           {navItems.map((item) => (
             <MobileLink
               key={item.href}
@@ -248,23 +269,64 @@ const MobileActions = styled.div`
 
 const MenuButton = styled.button`
   border: 1px solid ${(props) => props.theme.colors.border};
-  background: ${(props) => props.theme.colors.surface};
-  color: ${(props) => props.theme.colors.text};
+  background: ${(props) => props.theme.colors.surfaceAlt};
+  color: ${(props) => props.theme.colors.primary};
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
+  font-size: 1.35rem;
+  line-height: 1;
   cursor: pointer;
 `;
 
+const mobileMenuOpen = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem) scaleY(0.98);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
+`;
+
 const MobileNav = styled.nav`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  max-height: calc(100dvh - 5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem 1rem 1.25rem;
   border-top: 1px solid ${(props) => props.theme.colors.border};
+  border-radius: 0 0 1rem 1rem;
+  background: linear-gradient(135deg, ${(props) => props.theme.colors.surfaceAlt}, ${(props) => props.theme.colors.surface});
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  animation: ${mobileMenuOpen} 220ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 const MobileLink = styled(Link)`
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid ${(props) => props.theme.colors.primary};
+  border-radius: 0.5rem;
+  background: ${(props) => props.theme.colors.surface};
   font-weight: 600;
   color: ${(props) => props.theme.colors.text};
+  transition: color 160ms ease, transform 160ms ease;
+
+  &:hover {
+    color: ${(props) => props.theme.colors.primary};
+    transform: translateX(3px);
+  }
 `;

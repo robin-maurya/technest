@@ -21,22 +21,35 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeContextProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeMode] = useState<ThemeMode>("light");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("technest-theme") as ThemeMode | null;
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setThemeMode(savedTheme);
-      return;
-    }
+    let isActive = true;
 
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setThemeMode(prefersDark ? "dark" : "light");
+    queueMicrotask(() => {
+      if (!isActive) return;
+
+      const savedTheme = window.localStorage.getItem("technest-theme") as ThemeMode | null;
+      if (savedTheme === "light" || savedTheme === "dark") {
+        setThemeMode(savedTheme);
+      } else {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        setThemeMode(prefersDark ? "dark" : "light");
+      }
+      setIsInitialized(true);
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
     document.documentElement.dataset.theme = themeMode;
     window.localStorage.setItem("technest-theme", themeMode);
-  }, [themeMode]);
+  }, [isInitialized, themeMode]);
 
   const toggleTheme = useCallback(() => {
     setThemeMode((current) => (current === "light" ? "dark" : "light"));

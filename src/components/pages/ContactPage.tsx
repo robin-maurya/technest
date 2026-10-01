@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import styled from "styled-components";
 import { Container, Section, SectionHeading } from "@/components/ui/Shared";
 import { useAuth } from "@/context/AuthContext";
@@ -24,28 +24,35 @@ export function ContactPage() {
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const [form, setForm] = useState<FormState>(initialState);
+  const [userFieldsEdited, setUserFieldsEdited] = useState({ name: false, email: false });
   const [errors, setErrors] = useState<Partial<FormState>>({});
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setForm((current) => ({ ...current, name: user.username, email: user.email }));
-    }
-  }, [isAuthenticated, user]);
+  const activeForm = useMemo(
+    () => ({
+      ...form,
+      name: userFieldsEdited.name ? form.name : isAuthenticated && user ? user.username : form.name,
+      email: userFieldsEdited.email ? form.email : isAuthenticated && user ? user.email : form.email,
+    }),
+    [form, isAuthenticated, user, userFieldsEdited],
+  );
 
   const onChange = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+    if (field === "name" || field === "email") {
+      setUserFieldsEdited((current) => ({ ...current, [field]: true }));
+    }
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
   const validation = useMemo(() => {
     const nextErrors: Partial<FormState> = {};
-    if (!form.name.trim()) nextErrors.name = "Name is required";
-    if (!form.email.trim()) nextErrors.email = "Email is required";
-    if (!/[^\s@]+@[^\s@]+\.[^\s@]+/.test(form.email)) nextErrors.email = "Please enter a valid email";
-    if (!form.subject.trim()) nextErrors.subject = "Subject is required";
-    if (!form.message.trim()) nextErrors.message = "A short message is required";
+    if (!activeForm.name.trim()) nextErrors.name = "Name is required";
+    if (!activeForm.email.trim()) nextErrors.email = "Email is required";
+    if (!/[^\s@]+@[^\s@]+\.[^\s@]+/.test(activeForm.email)) nextErrors.email = "Please enter a valid email";
+    if (!activeForm.subject.trim()) nextErrors.subject = "Subject is required";
+    if (!activeForm.message.trim()) nextErrors.message = "A short message is required";
     return nextErrors;
-  }, [form]);
+  }, [activeForm]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -58,6 +65,7 @@ export function ContactPage() {
 
     showToast("Message sent. We will be in touch shortly.", "success");
     setForm(initialState);
+    setUserFieldsEdited({ name: true, email: true });
   };
 
   return (
@@ -81,12 +89,12 @@ export function ContactPage() {
           <FormCard onSubmit={handleSubmit}>
             <Field>
               <label htmlFor="name">Name</label>
-              <input id="name" value={form.name} onChange={(event) => onChange("name", event.target.value)} />
+              <input id="name" value={activeForm.name} onChange={(event) => onChange("name", event.target.value)} />
               {errors.name && <Error>{errors.name}</Error>}
             </Field>
             <Field>
               <label htmlFor="email">Email</label>
-              <input id="email" type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} />
+              <input id="email" type="email" value={activeForm.email} onChange={(event) => onChange("email", event.target.value)} />
               {errors.email && <Error>{errors.email}</Error>}
             </Field>
             <Field>
